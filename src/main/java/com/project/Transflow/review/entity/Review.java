@@ -54,6 +54,10 @@ public class Review {
     @Column
     private LocalDateTime publishedAt; // 게시 시점 (creation.kr)
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isComplete = false; // 문서 번역 완료 여부 (false: 부분 번역, true: 완전 번역)
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

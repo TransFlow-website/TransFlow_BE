@@ -29,5 +29,8 @@ public class CreateReviewRequest {
 
     @Schema(description = "체크리스트", example = "{\"translationComplete\": true, \"termDictionaryApplied\": true, \"reviewerConfirmed\": true}")
     private Map<String, Boolean> checklist;
+
+    @Schema(description = "문서 번역 완료 여부 (false: 부분 번역, true: 완전 번역)", example = "false", defaultValue = "false")
+    private Boolean isComplete = false;
 }
 

@@ -77,6 +77,7 @@ public class ReviewService {
                 .status("PENDING")
                 .comment(request.getComment())
                 .checklist(checklistJson)
+                .isComplete(request.getIsComplete() != null ? request.getIsComplete() : false)
                 .build();
 
         Review saved = reviewRepository.save(review);
@@ -112,8 +113,18 @@ public class ReviewService {
 
         // Document 상태 업데이트
         Document document = review.getDocument();
-        document.setStatus("APPROVED");
         document.setCurrentVersionId(version.getId());
+        
+        // isComplete가 false면 부분 번역이므로 다시 번역 대기 상태로 변경
+        // isComplete가 true면 완전 번역이므로 APPROVED 상태 유지
+        if (review.getIsComplete() != null && !review.getIsComplete()) {
+            // 부분 번역: 다른 번역가가 이어서 작업할 수 있도록 PENDING_TRANSLATION으로 변경
+            document.setStatus("PENDING_TRANSLATION");
+            log.info("부분 번역 승인: 문서 ID {}를 다시 번역 대기 상태로 변경", document.getId());
+        } else {
+            // 완전 번역: APPROVED 상태로 설정
+            document.setStatus("APPROVED");
+        }
         documentRepository.save(document);
 
         Review saved = reviewRepository.save(review);
@@ -199,6 +210,9 @@ public class ReviewService {
                 log.error("체크리스트 JSON 변환 실패", e);
             }
         }
+        if (request.getIsComplete() != null) {
+            review.setIsComplete(request.getIsComplete());
+        }
 
         Review saved = reviewRepository.save(review);
         log.info("리뷰 수정: 리뷰 ID {}", reviewId);
@@ -266,6 +280,7 @@ public class ReviewService {
                 .reviewedAt(review.getReviewedAt())
                 .finalApprovalAt(review.getFinalApprovalAt())
                 .publishedAt(review.getPublishedAt())
+                .isComplete(review.getIsComplete())
                 .createdAt(review.getCreatedAt())
                 .updatedAt(review.getUpdatedAt());
 

@@ -48,6 +48,9 @@ public class ReviewResponse {
     @Schema(description = "게시 시점", example = "2024-01-01T00:00:00")
     private LocalDateTime publishedAt;
 
+    @Schema(description = "문서 번역 완료 여부", example = "false")
+    private Boolean isComplete;
+
     @Schema(description = "생성일시", example = "2024-01-01T00:00:00")
     private LocalDateTime createdAt;
 

@@ -37,11 +37,18 @@ public class TranslationTaskService {
         User translator = userRepository.findById(translatorId)
                 .orElseThrow(() -> new IllegalArgumentException("번역봉사자를 찾을 수 없습니다: " + translatorId));
 
-        // 이미 작업이 있는지 확인
+        // 같은 번역가가 같은 문서에 대해 IN_PROGRESS 상태의 작업이 있는지 확인
+        // SUBMITTED 상태는 허용 (부분 번역 후 다른 번역가가 이어서 작업할 수 있음)
         Optional<TranslationTask> existingTask = translationTaskRepository
                 .findByDocument_IdAndTranslator_Id(request.getDocumentId(), translatorId);
-        if (existingTask.isPresent()) {
-            throw new IllegalArgumentException("이미 해당 문서에 대한 번역 작업이 존재합니다.");
+        if (existingTask.isPresent() && "IN_PROGRESS".equals(existingTask.get().getStatus())) {
+            throw new IllegalArgumentException("이미 해당 문서에 대한 진행 중인 번역 작업이 존재합니다.");
+        }
+        
+        // 같은 번역가가 같은 문서에 대해 AVAILABLE 상태의 작업이 있으면 재사용
+        if (existingTask.isPresent() && "AVAILABLE".equals(existingTask.get().getStatus())) {
+            log.info("기존 AVAILABLE 작업 재사용: 작업 ID {}", existingTask.get().getId());
+            return toResponse(existingTask.get());
         }
 
         // assigned_by 결정
